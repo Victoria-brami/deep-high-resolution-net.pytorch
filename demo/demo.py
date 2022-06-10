@@ -200,6 +200,7 @@ def parse_args():
     parser.add_argument('--image',type=str)
     parser.add_argument('--write',action='store_true')
     parser.add_argument('--showFps',action='store_true')
+    parser.add_argument('--save_path', type=str, default='/root/workspace/deep-high-resolution-net.pytorch/videos/output.mkv')
 
     parser.add_argument('opts',
                         help='Modify config options using the command-line',
@@ -256,7 +257,7 @@ def main():
 
     if args.webcam or args.video:
         if args.write:
-            save_path = 'output.avi'
+            save_path = args.save_path
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
             out = cv2.VideoWriter(save_path,fourcc, 24.0, (int(vidcap.get(3)),int(vidcap.get(4))))
         while True:
@@ -290,9 +291,10 @@ def main():
                 if args.write:
                     out.write(image_bgr)
 
-                cv2.imshow('demo',image_bgr)
-                if cv2.waitKey(1) & 0XFF==ord('q'):
-                    break
+                # ADDED Rmoved imshow functions
+                # cv2.imshow('demo',image_bgr)
+                # if cv2.waitKey(1) & 0XFF==ord('q'):
+                #     break
             else:
                 print('cannot load the video.')
                 break
@@ -335,9 +337,10 @@ def main():
             cv2.imwrite(save_path,image_bgr)
             print('the result image has been saved as {}'.format(save_path))
 
-        cv2.imshow('demo',image_bgr)
-        if cv2.waitKey(0) & 0XFF==ord('q'):
-            cv2.destroyAllWindows()
+        # ADDED : commented the line with imshow to avoid display
+        #cv2.imshow('demo',image_bgr)
+        #if cv2.waitKey(0) & 0XFF==ord('q'):
+        #    cv2.destroyAllWindows()
         
 if __name__ == '__main__':
     main()
