@@ -71,32 +71,45 @@ NO_ANKLE_SKELETON = [
     [1,3],[1,0],[2,4],[2,0],[0,5],[0,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12],[11,13],[12,14]
 ]
 
+NO_ANKLE_NO_KNEE_SKELETON = [
+    [1,3],[1,0],[2,4],[2,0],[0,5],[0,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12]
+]
+
 CocoColors = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0], [85, 255, 0], [0, 255, 0],
               [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255], [85, 0, 255],
               [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85]]
 
 NUM_KPTS = 17
-NO_ANKLE_NUM_KPTS = NUM_KPTS - 2
+
 
 CTX = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-def draw_pose(keypoints,img,no_ankle=False):
+def draw_pose(keypoints,img,no_ankle=False, no_knee=False):
     """draw the keypoints and the skeletons.
     :params keypoints: the shape should be equal to [17,2] or [15, 2] if the ankles are removed
     :params img: input image
     :params no_ankle: True if we don't want to draw the ankles
     """
+    assert keypoints.shape == (NUM_KPTS,2)
     if no_ankle:
-        assert keypoints.shape == (NUM_KPTS,2)
-        for i in range(len(NO_ANKLE_SKELETON)):
-            kpt_a, kpt_b = NO_ANKLE_SKELETON[i][0], NO_ANKLE_SKELETON[i][1]
-            x_a, y_a = keypoints[kpt_a][0],keypoints[kpt_a][1]
-            x_b, y_b = keypoints[kpt_b][0],keypoints[kpt_b][1]
-            cv2.circle(img, (int(x_a), int(y_a)), 6, CocoColors[i], -1)
-            cv2.circle(img, (int(x_b), int(y_b)), 6, CocoColors[i], -1)
-            cv2.line(img, (int(x_a), int(y_a)), (int(x_b), int(y_b)), CocoColors[i], 2)
+        if no_knee:
+            for i in range(len(NO_ANKLE_NO_KNEE_SKELETON)):
+                kpt_a, kpt_b = NO_ANKLE_NO_KNEE_SKELETON[i][0], NO_ANKLE_NO_KNEE_SKELETON[i][1]
+                x_a, y_a = keypoints[kpt_a][0],keypoints[kpt_a][1]
+                x_b, y_b = keypoints[kpt_b][0],keypoints[kpt_b][1]
+                cv2.circle(img, (int(x_a), int(y_a)), 6, CocoColors[i], -1)
+                cv2.circle(img, (int(x_b), int(y_b)), 6, CocoColors[i], -1)
+                cv2.line(img, (int(x_a), int(y_a)), (int(x_b), int(y_b)), CocoColors[i], 2)
+        else:
+            for i in range(len(NO_ANKLE_SKELETON)):
+                kpt_a, kpt_b = NO_ANKLE_SKELETON[i][0], NO_ANKLE_SKELETON[i][1]
+                x_a, y_a = keypoints[kpt_a][0],keypoints[kpt_a][1]
+                x_b, y_b = keypoints[kpt_b][0],keypoints[kpt_b][1]
+                cv2.circle(img, (int(x_a), int(y_a)), 6, CocoColors[i], -1)
+                cv2.circle(img, (int(x_b), int(y_b)), 6, CocoColors[i], -1)
+                cv2.line(img, (int(x_a), int(y_a)), (int(x_b), int(y_b)), CocoColors[i], 2)
     else:
-        assert keypoints.shape == (NUM_KPTS,2)
+        
         for i in range(len(SKELETON)):
             kpt_a, kpt_b = SKELETON[i][0], SKELETON[i][1]
             x_a, y_a = keypoints[kpt_a][0],keypoints[kpt_a][1]
@@ -217,7 +230,8 @@ def parse_args():
     parser.add_argument('--write',action='store_true')
     parser.add_argument('--showFps',action='store_true')
     parser.add_argument('--save_path', type=str, default='/root/workspace/deep-high-resolution-net.pytorch/videos/output.mkv')
-    parser.add_argument('--no_ankle', action='store_true')
+    parser.add_argument('--no_ankle', action='store_true', help="Draw the ankles or not")
+    parser.add_argument('--no_knee', action='store_true', help="Draw the knees or not")
     parser.add_argument('opts',
                         help='Modify config options using the command-line',
                         default=None,
@@ -252,11 +266,11 @@ def main():
 
     if cfg.TEST.MODEL_FILE:
         print('=> loading model from {}'.format(cfg.TEST.MODEL_FILE))
-        pose_model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE, map_location='cpu'), strict=False)
+        pose_model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE), strict=False)
     else:
         print('expected model defined in config at TEST.MODEL_FILE')
 
-    #pose_model = torch.nn.DataParallel(pose_model, device_ids=cfg.GPUS)
+    pose_model = torch.nn.DataParallel(pose_model, device_ids=cfg.GPUS)
     pose_model.to(CTX)
     pose_model.eval()
 
@@ -298,7 +312,7 @@ def main():
                         pose_preds = get_pose_estimation_prediction(pose_model, image_pose, center, scale)
                         if len(pose_preds)>=1:
                             for kpt in pose_preds:
-                                draw_pose(kpt,image_bgr, args.no_ankle) # draw the poses
+                                draw_pose(kpt,image_bgr, args.no_ankle, args.no_knee) # draw the poses
 
                 if args.showFps:
                     fps = 1/(time.time()-last_time)
@@ -342,7 +356,7 @@ def main():
                 pose_preds = get_pose_estimation_prediction(pose_model, image_pose, center, scale)
                 if len(pose_preds)>=1:
                     for kpt in pose_preds:
-                        draw_pose(kpt,image_bgr,args.no_ankle) # draw the poses
+                        draw_pose(kpt,image_bgr,args.no_ankle,args.no_knee) # draw the poses
         
         if args.showFps:
             fps = 1/(time.time()-last_time)
