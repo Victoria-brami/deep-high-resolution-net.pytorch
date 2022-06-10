@@ -67,27 +67,44 @@ SKELETON = [
     [1,3],[1,0],[2,4],[2,0],[0,5],[0,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12],[11,13],[13,15],[12,14],[14,16]
 ]
 
+NO_ANKLE_SKELETON = [
+    [1,3],[1,0],[2,4],[2,0],[0,5],[0,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12],[11,1
+3],[12,14]
+]
+
 CocoColors = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0], [85, 255, 0], [0, 255, 0],
               [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255], [85, 0, 255],
               [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85]]
 
 NUM_KPTS = 17
+NO_ANKLE_NUM_KPTS = NUM_KPTS - 2
 
 CTX = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-def draw_pose(keypoints,img):
+def draw_pose(keypoints,img,no_ankle=False):
     """draw the keypoints and the skeletons.
-    :params keypoints: the shape should be equal to [17,2]
-    :params img:
+    :params keypoints: the shape should be equal to [17,2] or [15, 2] if the ankles are removed
+    :params img: input image
+    :params no_ankle: True if we don't want to draw the ankles
     """
-    assert keypoints.shape == (NUM_KPTS,2)
-    for i in range(len(SKELETON)):
-        kpt_a, kpt_b = SKELETON[i][0], SKELETON[i][1]
-        x_a, y_a = keypoints[kpt_a][0],keypoints[kpt_a][1]
-        x_b, y_b = keypoints[kpt_b][0],keypoints[kpt_b][1] 
-        cv2.circle(img, (int(x_a), int(y_a)), 6, CocoColors[i], -1)
-        cv2.circle(img, (int(x_b), int(y_b)), 6, CocoColors[i], -1)
-        cv2.line(img, (int(x_a), int(y_a)), (int(x_b), int(y_b)), CocoColors[i], 2)
+    if no_ankle:
+        assert keypoints.shape == (NO_ANKLE_NUM_KPTS,2)
+        for i in range(len(NO_ANKLE_SKELETON)):
+            kpt_a, kpt_b = NO_ANKLE_SKELETON[i][0], NO_ANKLE_SKELETON[i][1]
+            x_a, y_a = keypoints[kpt_a][0],keypoints[kpt_a][1]
+            x_b, y_b = keypoints[kpt_b][0],keypoints[kpt_b][1]
+            cv2.circle(img, (int(x_a), int(y_a)), 6, CocoColors[i], -1)
+            cv2.circle(img, (int(x_b), int(y_b)), 6, CocoColors[i], -1)
+            cv2.line(img, (int(x_a), int(y_a)), (int(x_b), int(y_b)), CocoColors[i], 2)
+    else:
+        assert keypoints.shape == (NUM_KPTS,2)
+        for i in range(len(SKELETON)):
+            kpt_a, kpt_b = SKELETON[i][0], SKELETON[i][1]
+            x_a, y_a = keypoints[kpt_a][0],keypoints[kpt_a][1]
+            x_b, y_b = keypoints[kpt_b][0],keypoints[kpt_b][1] 
+            cv2.circle(img, (int(x_a), int(y_a)), 6, CocoColors[i], -1)
+            cv2.circle(img, (int(x_b), int(y_b)), 6, CocoColors[i], -1)
+            cv2.line(img, (int(x_a), int(y_a)), (int(x_b), int(y_b)), CocoColors[i], 2)
 
 def draw_bbox(box,img):
     """draw the detected bounding box on the image.
