@@ -68,8 +68,7 @@ SKELETON = [
 ]
 
 NO_ANKLE_SKELETON = [
-    [1,3],[1,0],[2,4],[2,0],[0,5],[0,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12],[11,1
-3],[12,14]
+    [1,3],[1,0],[2,4],[2,0],[0,5],[0,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12],[11,13],[12,14]
 ]
 
 CocoColors = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0], [85, 255, 0], [0, 255, 0],
@@ -88,7 +87,7 @@ def draw_pose(keypoints,img,no_ankle=False):
     :params no_ankle: True if we don't want to draw the ankles
     """
     if no_ankle:
-        assert keypoints.shape == (NO_ANKLE_NUM_KPTS,2)
+        assert keypoints.shape == (NUM_KPTS,2)
         for i in range(len(NO_ANKLE_SKELETON)):
             kpt_a, kpt_b = NO_ANKLE_SKELETON[i][0], NO_ANKLE_SKELETON[i][1]
             x_a, y_a = keypoints[kpt_a][0],keypoints[kpt_a][1]
@@ -218,7 +217,7 @@ def parse_args():
     parser.add_argument('--write',action='store_true')
     parser.add_argument('--showFps',action='store_true')
     parser.add_argument('--save_path', type=str, default='/root/workspace/deep-high-resolution-net.pytorch/videos/output.mkv')
-
+    parser.add_argument('--no_ankle', action='store_true')
     parser.add_argument('opts',
                         help='Modify config options using the command-line',
                         default=None,
@@ -253,11 +252,11 @@ def main():
 
     if cfg.TEST.MODEL_FILE:
         print('=> loading model from {}'.format(cfg.TEST.MODEL_FILE))
-        pose_model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE), strict=False)
+        pose_model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE, map_location='cpu'), strict=False)
     else:
         print('expected model defined in config at TEST.MODEL_FILE')
 
-    pose_model = torch.nn.DataParallel(pose_model, device_ids=cfg.GPUS)
+    #pose_model = torch.nn.DataParallel(pose_model, device_ids=cfg.GPUS)
     pose_model.to(CTX)
     pose_model.eval()
 
@@ -299,7 +298,7 @@ def main():
                         pose_preds = get_pose_estimation_prediction(pose_model, image_pose, center, scale)
                         if len(pose_preds)>=1:
                             for kpt in pose_preds:
-                                draw_pose(kpt,image_bgr) # draw the poses
+                                draw_pose(kpt,image_bgr, args.no_ankle) # draw the poses
 
                 if args.showFps:
                     fps = 1/(time.time()-last_time)
@@ -343,7 +342,7 @@ def main():
                 pose_preds = get_pose_estimation_prediction(pose_model, image_pose, center, scale)
                 if len(pose_preds)>=1:
                     for kpt in pose_preds:
-                        draw_pose(kpt,image_bgr) # draw the poses
+                        draw_pose(kpt,image_bgr,args.no_ankle) # draw the poses
         
         if args.showFps:
             fps = 1/(time.time()-last_time)
