@@ -93,7 +93,7 @@ class MPIIDataset(JointsDataset):
 
         return gt_db
 
-    def evaluate(dee
+    def evaluate(self, cfg, preds, output_dir, *args, **kwargs):
         # convert 0-based index to 1-based index
         preds = preds[:, :, 0:2] + 1.0
 

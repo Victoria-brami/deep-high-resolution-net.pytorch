@@ -81,7 +81,7 @@ class COCOWholeBodyDataset(JointsDataset):
         self.aspect_ratio = self.image_width * 1.0 / self.image_height
         self.pixel_std = 200
 
-        self.coco = COCO(self._get_ann_file_keypoint(), sigmas=KPT_SIGMAS)
+        self.coco = COCO(self._get_ann_file_keypoint())
 
         # deal with class names
         cats = [cat['name']
@@ -114,6 +114,8 @@ class COCOWholeBodyDataset(JointsDataset):
             (16, 20), (16, 19), (16, 18),    # left foot
             (17, 23), (17, 21), (17, 22)     # right foot
             ]
+        
+        #
 
         face_skeleton = [
             (25, 5), (39, 4),  # ear to ear body
@@ -142,6 +144,7 @@ class COCOWholeBodyDataset(JointsDataset):
             + [(115, 118), (118, 122), (122, 126), (126, 130)])
 
         self.flip_pairs = body_foot_skeleton + face_skeleton + lefthand_skeleton + righthand_skeleton
+        self.flip_pairs = np.array(self.flip_pairs) - np.ones(np.array(self.flip_pairs).shape, dtype=int)
         self.parent_ids = None
         self.upper_body_ids = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
         self.lower_body_ids = (11, 12, 13, 14, 15, 16)
@@ -244,15 +247,60 @@ class COCOWholeBodyDataset(JointsDataset):
             joints_3d = np.zeros((self.num_joints, 3), dtype=np.float)
             joints_3d_vis = np.zeros((self.num_joints, 3), dtype=np.float)
             for ipt in range(self.num_joints):
-                joints_3d[ipt, 0] = obj['keypoints'][ipt * 3 + 0]
-                joints_3d[ipt, 1] = obj['keypoints'][ipt * 3 + 1]
-                joints_3d[ipt, 2] = 0
-                t_vis = obj['keypoints'][ipt * 3 + 2]
-                if t_vis > 1:
-                    t_vis = 1
-                joints_3d_vis[ipt, 0] = t_vis
-                joints_3d_vis[ipt, 1] = t_vis
-                joints_3d_vis[ipt, 2] = 0
+                if ipt < 17:
+                    joints_3d[ipt, 0] = obj['keypoints'][ipt * 3 + 0]
+                    joints_3d[ipt, 1] = obj['keypoints'][ipt * 3 + 1]
+                    joints_3d[ipt, 2] = 0
+                    t_vis = obj['keypoints'][ipt * 3 + 2]
+                    if t_vis > 1:
+                        t_vis = 1
+                    joints_3d_vis[ipt, 0] = t_vis
+                    joints_3d_vis[ipt, 1] = t_vis
+                    joints_3d_vis[ipt, 2] = 0
+                    
+                elif ipt >= 17 and ipt < 23:
+                    joints_3d[ipt, 0] = obj['foot_kpts'][(ipt - 17) * 3 + 0]
+                    joints_3d[ipt, 1] = obj['foot_kpts'][(ipt - 17) * 3 + 1]
+                    joints_3d[ipt, 2] = 0
+                    t_vis = obj['foot_kpts'][(ipt - 17) * 3 + 2]
+                    if t_vis > 1:
+                        t_vis = 1
+                    joints_3d_vis[ipt, 0] = t_vis
+                    joints_3d_vis[ipt, 1] = t_vis
+                    joints_3d_vis[ipt, 2] = 0
+                    
+                elif ipt >= 23 and ipt < 91:
+                    joints_3d[ipt, 0] = obj['face_kpts'][(ipt - 23) * 3 + 0]
+                    joints_3d[ipt, 1] = obj['face_kpts'][(ipt - 23) * 3 + 1]
+                    joints_3d[ipt, 2] = 0
+                    t_vis = obj['face_kpts'][(ipt - 23) * 3 + 2]
+                    if t_vis > 1:
+                        t_vis = 1
+                    joints_3d_vis[ipt, 0] = t_vis
+                    joints_3d_vis[ipt, 1] = t_vis
+                    joints_3d_vis[ipt, 2] = 0
+                    
+                elif ipt >= 91 and ipt < 112:
+                    joints_3d[ipt, 0] = obj['lefthand_kpts'][(ipt - 91) * 3 + 0]
+                    joints_3d[ipt, 1] = obj['lefthand_kpts'][(ipt - 91) * 3 + 1]
+                    joints_3d[ipt, 2] = 0
+                    t_vis = obj['lefthand_kpts'][(ipt - 91) * 3 + 2]
+                    if t_vis > 1:
+                        t_vis = 1
+                    joints_3d_vis[ipt, 0] = t_vis
+                    joints_3d_vis[ipt, 1] = t_vis
+                    joints_3d_vis[ipt, 2] = 0
+                    
+                else :
+                    joints_3d[ipt, 0] = obj['righthand_kpts'][(ipt - 112) * 3 + 0]
+                    joints_3d[ipt, 1] = obj['righthand_kpts'][(ipt - 112) * 3 + 1]
+                    joints_3d[ipt, 2] = 0
+                    t_vis = obj['righthand_kpts'][(ipt - 112) * 3 + 2]
+                    if t_vis > 1:
+                        t_vis = 1
+                    joints_3d_vis[ipt, 0] = t_vis
+                    joints_3d_vis[ipt, 1] = t_vis
+                    joints_3d_vis[ipt, 2] = 0
 
             center, scale = self._box2cs(obj['clean_bbox'][:4])
             rec.append({
@@ -402,12 +450,12 @@ class COCOWholeBodyDataset(JointsDataset):
             if self.soft_nms:
                 keep = soft_oks_nms(
                     [img_kpts[i] for i in range(len(img_kpts))],
-                    oks_thre
+                    oks_thre, sigmas=KPT_SIGMAS
                 )
             else:
                 keep = oks_nms(
                     [img_kpts[i] for i in range(len(img_kpts))],
-                    oks_thre
+                    oks_thre, sigmas=KPT_SIGMAS
                 )
 
             if len(keep) == 0:

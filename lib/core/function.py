@@ -14,6 +14,7 @@ import os
 
 import numpy as np
 import torch
+import cv2
 
 from core.evaluate import accuracy
 from core.inference import get_final_preds
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 def train(config, train_loader, model, criterion, optimizer, epoch,
-          output_dir, tb_log_dir, writer_dict):
+          output_dir, tb_log_dir, writer_dict, wb=None):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -89,13 +90,17 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
             writer.add_scalar('train_acc', acc.val, global_steps)
             writer_dict['train_global_steps'] = global_steps + 1
 
+            if wb is not None:
+                wb.log({'train_loss': losses.val, 'train_acc': acc.val, 'train_global_steps': train_global_steps+1})
+   
+
             prefix = '{}_{}'.format(os.path.join(output_dir, 'train'), i)
             save_debug_images(config, input, meta, target, pred*4, output,
                               prefix)
 
 
 def validate(config, val_loader, val_dataset, model, criterion, output_dir,
-             tb_log_dir, writer_dict=None):
+             tb_log_dir, writer_dict=None, wb=None):
     batch_time = AverageMeter()
     losses = AverageMeter()
     acc = AverageMeter()
@@ -234,6 +239,10 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir,
                 )
             writer_dict['valid_global_steps'] = global_steps + 1
 
+        if wb:
+            wb.log({'valid_loss': losses.avg, 'valid_acc': acc.avg, 'valid_global_steps': global_steps + 1})
+            # Add cv2 imshowfor validation sets
+    
     return perf_indicator
 
 
