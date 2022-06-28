@@ -21,7 +21,7 @@ import numpy as np
 import time
 
 
-import _init_paths
+import demo._init_paths
 import models
 from config import cfg
 from config import update_config
@@ -227,8 +227,9 @@ def parse_args():
     parser.add_argument('--video', type=str)
     parser.add_argument('--webcam',action='store_true')
     parser.add_argument('--image',type=str)
-    parser.add_argument('--write',action='store_true')
+    parser.add_argument('--write', action='store_true')
     parser.add_argument('--showFps',action='store_true')
+    parser.add_argument('--device', default="cpu")
     parser.add_argument('--save_path', type=str, default='/root/workspace/deep-high-resolution-net.pytorch/videos/output.mkv')
     parser.add_argument('--no_ankle', action='store_true', help="Draw the ankles or not")
     parser.add_argument('--no_knee', action='store_true', help="Draw the knees or not")
@@ -266,7 +267,7 @@ def main():
 
     if cfg.TEST.MODEL_FILE:
         print('=> loading model from {}'.format(cfg.TEST.MODEL_FILE))
-        pose_model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE), strict=False)
+        pose_model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE, map_location=args.device), strict=False)
     else:
         print('expected model defined in config at TEST.MODEL_FILE')
 
@@ -281,6 +282,8 @@ def main():
         vidcap = cv2.VideoCapture(args.video)
     elif args.image:
         image_bgr = cv2.imread(args.image)
+        print("args images", args.image)
+        print(image_bgr.shape)
     else:
         print('please use --video or --webcam or --image to define the input.')
         return 
@@ -364,8 +367,8 @@ def main():
         
         if args.write:
             save_path = 'output.jpg'
-            cv2.imwrite(save_path,image_bgr)
-            print('the result image has been saved as {}'.format(save_path))
+            cv2.imwrite(args.save_path,image_bgr)
+            print('the result image has been saved as {}'.format(args.save_path))
 
         # ADDED : commented the line with imshow to avoid display
         #cv2.imshow('demo',image_bgr)
