@@ -38,7 +38,8 @@ class JointsDataset(Dataset):
 
         self.output_path = cfg.OUTPUT_DIR
         self.data_format = cfg.DATASET.DATA_FORMAT
-
+        
+        self.apply_augmentation = cfg.DATASET.AUGMENTATION
         self.scale_factor = cfg.DATASET.SCALE_FACTOR
         self.rotation_factor = cfg.DATASET.ROT_FACTOR
         self.flip = cfg.DATASET.FLIP
@@ -163,8 +164,10 @@ class JointsDataset(Dataset):
                 joints, joints_vis = fliplr_joints(
                     joints, joints_vis, data_numpy.shape[1], self.flip_pairs)
                 c[0] = data_numpy.shape[1] - c[0] - 1
-
-        trans = get_affine_transform(c, s, r, self.image_size)
+        if self.apply_augmentation:
+            trans = get_affine_transform(c, s, r, self.image_size)
+        else:
+            trans = np.array([[1, 0, 0], [0, 1, 0]])
         input = cv2.warpAffine(
             data_numpy,
             trans,

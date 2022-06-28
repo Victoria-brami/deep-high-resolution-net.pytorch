@@ -22,7 +22,7 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
-from tools import _init_paths
+import _init_paths
 from config import cfg
 from config import update_config
 from core.loss import JointsMSELoss
@@ -162,7 +162,7 @@ def main():
     optimizer = get_optimizer(cfg, model)
     begin_epoch = cfg.TRAIN.BEGIN_EPOCH
     checkpoint_file = os.path.join(
-        final_output_dir, 'checkpoint.pth'
+        final_output_dir, 'pandora_checkpoint.pth'
     )
 
     if cfg.AUTO_RESUME and os.path.exists(checkpoint_file):

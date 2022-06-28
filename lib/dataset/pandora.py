@@ -132,7 +132,10 @@ class PandoraDataset(JointsDataset):
         """ self.root / annotations / person_keypoints_train2017.json """
         prefix = 'person_keypoints' \
             if 'test' not in self.image_set else 'image_info'
-        return os.path.join(self.root, 'person_keypoints_train_coco_format.json')
+        return os.path.join(
+            self.root,
+            prefix + '_' + self.image_set + '_coco_format.json'
+        )
 
 
     def _load_image_set_index(self):
@@ -436,7 +439,7 @@ class PandoraDataset(JointsDataset):
                 key_points[:, ipt * 3 + 1] = _key_points[:, ipt, 1]
                 key_points[:, ipt * 3 + 2] = _key_points[:, ipt, 2]  # keypoints score.
 
-            print("Image name id: ", img_kpts[0])
+            
             result = [
                 {
                     'image_id': img_kpts[k]['imgnum'],
@@ -453,7 +456,7 @@ class PandoraDataset(JointsDataset):
         return cat_results
 
     def _do_python_keypoint_eval(self, res_file, res_folder):
-        print("\n Res file", res_file)
+        
         coco_dt = self.coco.loadRes(res_file)
         coco_eval = COCOeval(self.coco, coco_dt, 'keypoints')
         coco_eval.params.useSegm = None
