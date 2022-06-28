@@ -12,16 +12,16 @@ PRINT_FREQ: 100
 
 DATASET:
   COLOR_RGB: true
-  DATASET: 'coco'
+  DATASET: 'ticam'
   DATA_FORMAT: jpg
   FLIP: true
   NUM_JOINTS_HALF_BODY: 8
   PROB_HALF_BODY: 0.3
-  ROOT: 'data/ticam/'
+  ROOT: '/datasets_master/TICaM'
   ROT_FACTOR: 45
   SCALE_FACTOR: 0.35
-  TEST_SET: 'synthetic_ticam'
-  TRAIN_SET: 'synthetic_ticam'
+  TEST_SET: 'Synthetic_images'
+  TRAIN_SET: ''
 MODEL:
   INIT_WEIGHTS: true
   NAME: pose_hrnet
@@ -108,7 +108,7 @@ TRAIN:
   NESTEROV: false
 TEST:
   BATCH_SIZE_PER_GPU: 32
-  COCO_BBOX_FILE: ''
+  COCO_BBOX_FILE: '/datasets_master/TICaM/ticam_detections_person.json'
   BBOX_THRE: 1.0
   IMAGE_THRE: 0.0
   IN_VIS_THRE: 0.2

@@ -14,7 +14,7 @@ import logging
 import os
 
 from xtcocotools.coco import COCO
-from xtcocotools.cocoeval import COCOeval
+from dataset.cocoeval import COCOeval
 import json_tricks as json
 import numpy as np
 
@@ -538,7 +538,7 @@ class COCOWholeBodyDataset(JointsDataset):
 
     def _do_python_keypoint_eval(self, res_file, res_folder):
         coco_dt = self.coco.loadRes(res_file)
-        coco_eval = COCOeval(self.coco, coco_dt, 'keypoints', KPT_SIGMAS)
+        coco_eval = COCOeval(self.coco, coco_dt, 'keypoints_wholebody', KPT_SIGMAS)
         coco_eval.params.useSegm = None
         coco_eval.evaluate()
         coco_eval.accumulate()

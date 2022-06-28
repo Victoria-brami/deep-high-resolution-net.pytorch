@@ -42,6 +42,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
 
         # compute output
         outputs = model(input)
+        print("  OUTPUTS SHAPE: ", outputs.shape)
 
         target = target.cuda(non_blocking=True)
         target_weight = target_weight.cuda(non_blocking=True)
