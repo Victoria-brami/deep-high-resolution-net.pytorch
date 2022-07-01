@@ -181,7 +181,7 @@ class TICaMDataset(JointsDataset):
         # sanitize bboxes
         valid_objs = []
         for obj in objs:
-            #print("\n before: ", obj['bbox'])
+            
             x, y, w, h = obj['bbox']
             x1 = np.max((0, x))
             y1 = np.max((0, y))
@@ -190,7 +190,7 @@ class TICaMDataset(JointsDataset):
             if obj['area'] > 0 and x2 >= x1 and y2 >= y1:
                 obj['clean_bbox'] = [x1, y1, x2-x1, y2-y1]
                 valid_objs.append(obj)
-            #print(" after: ", obj['clean_bbox'])
+           
         objs = valid_objs
 
         rec = []
@@ -443,7 +443,7 @@ class TICaMDataset(JointsDataset):
                 key_points[:, ipt * 3 + 1] = _key_points[:, ipt, 1]
                 key_points[:, ipt * 3 + 2] = _key_points[:, ipt, 2]  # keypoints score.
 
-            print("Image name id: ", img_kpts[0])
+         
             result = [
                 {
                     'image_id': img_kpts[k]['imgnum'],
@@ -460,7 +460,7 @@ class TICaMDataset(JointsDataset):
         return cat_results
 
     def _do_python_keypoint_eval(self, res_file, res_folder):
-        print("\n Res file", res_file)
+  
         coco_dt = self.coco.loadRes(res_file)
         coco_eval = COCOeval(self.coco, coco_dt, 'keypoints')
         coco_eval.params.useSegm = None

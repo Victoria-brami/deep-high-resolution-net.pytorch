@@ -21,6 +21,7 @@ import numpy as np
 from dataset.JointsDataset import JointsDataset
 from nms.nms import oks_nms
 from nms.nms import soft_oks_nms
+import valeodata
 
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ righthand = [0.029, 0.022, 0.035, 0.037, 0.047, 0.026, 0.025, 0.024, 0.035, 0.01
 all = body + foot + face + lefthand + righthand
 KPT_SIGMAS = np.array( all )
 
+valeodata.download('Pandora')
 
 class PandoraDataset(JointsDataset):
     '''
