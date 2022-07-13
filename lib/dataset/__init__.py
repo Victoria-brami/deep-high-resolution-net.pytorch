@@ -12,4 +12,5 @@ from .mpii import MPIIDataset as mpii
 from .coco import COCODataset as coco
 from .ticam import TICaMDataset as ticam
 from .pandora import PandoraDataset as pandora
-from .coco_wholebody import COCOWholeBodyDataset as coco_wholebody
+from .dad import DadDataset as dad
+# from .coco_wholebody import COCOWholeBodyDataset as coco_wholebody

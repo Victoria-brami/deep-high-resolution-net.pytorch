@@ -22,6 +22,10 @@ from dataset.JointsDataset import JointsDataset
 from nms.nms import oks_nms
 from nms.nms import soft_oks_nms
 
+import valeodata
+path_to_downloaded_dataset = valeodata.download('/datasets_master/DriveAndAct')
+print("Downloaded_path: ", path_to_downloaded_dataset)
+
 
 logger = logging.getLogger(__name__)
 
@@ -80,8 +84,17 @@ class DadDataset(JointsDataset):
         self.image_height = cfg.MODEL.IMAGE_SIZE[1]
         self.aspect_ratio = self.image_width * 1.0 / self.image_height
         self.pixel_std = 200
+        
+        # Mismatch between annotations and corresponding images
+        self.gap = 0
 
         self.coco = COCO(self._get_ann_file_keypoint())
+        annsImgIds = [self.coco.dataset['annotations'][ann]['image_id'] for ann in range(len(self.coco.dataset['annotations']))]
+        print("{} Image IDs of annotations: \n".format(image_set), len(annsImgIds), annsImgIds[-6:])
+        print()
+        im_ids = self.coco.getImgIds()
+        print("{} Related images ids: \n".format(image_set), len(im_ids), im_ids[-6:])
+        print("ASSERTION: ", set(annsImgIds) == (set(annsImgIds) & set(im_ids)))
 
         # deal with class names
         cats = [cat['name']
@@ -133,12 +146,16 @@ class DadDataset(JointsDataset):
             if 'test' not in self.image_set else 'image_info'
         return os.path.join(
             self.root,
-            prefix + '_' + self.image_set + '.json'
+            prefix + '_' + self.image_set + '_coco_format.json'
         )
 
     def _load_image_set_index(self):
         """ image id: int """
         image_ids = self.coco.getImgIds()
+        print("Length of image ids: ", len(image_ids))
+        for i in range(len(image_ids)-1):
+            if image_ids[i+1] != image_ids[i] + 1:
+                print("MISMATCH BETWEEN IDS: ", image_ids[i:i+2])
         return image_ids
 
     def _get_db(self):
@@ -154,6 +171,8 @@ class DadDataset(JointsDataset):
         """ ground truth bbox and keypoints """
         gt_db = []
         for index in self.image_set_index:
+            if len(self._load_coco_keypoint_annotation_kernal(index)) == 0:
+                print("Problem with Index: ", index)
             gt_db.extend(self._load_coco_keypoint_annotation_kernal(index))
         return gt_db
 
@@ -177,6 +196,7 @@ class DadDataset(JointsDataset):
 
         # sanitize bboxes
         valid_objs = []
+      
         for obj in objs:
             
             x, y, w, h = obj['bbox']
@@ -185,20 +205,22 @@ class DadDataset(JointsDataset):
             x2 = np.min((width - 1, x1 + np.max((0, w - 1))))
             y2 = np.min((height - 1, y1 + np.max((0, h - 1))))
             if obj['area'] > 0 and x2 >= x1 and y2 >= y1:
-                obj['clean_bbox'] = [x1, y1, x2-x1, y2-y1]
+                obj['clean_bbox'] =  [x1, y1, x2-x1, y2-y1]
                 valid_objs.append(obj)
            
         objs = valid_objs
-
+        
         rec = []
         for obj in objs:
             cls = 1
             # cls = self._coco_ind_to_class_ind[obj['category_id']]
             if cls != 1:
+                print("Cls problem on index", index)
                 continue
 
             # ignore objs without keypoints annotation
             if max(obj['keypoints']) == 0:
+                print("kpt problem on index", index)
                 continue
 
             joints_3d = np.zeros((self.num_joints, 3), dtype=np.float)
@@ -280,6 +302,7 @@ class DadDataset(JointsDataset):
 
         kpt_db = []
         num_boxes = 0
+        print("Number of box detections: ", len(all_boxes))
         for n_img in range(0, len(all_boxes)):
             det_res = all_boxes[n_img]
             if det_res['category_id'] != 1:
@@ -328,6 +351,7 @@ class DadDataset(JointsDataset):
         im_id = 0
         # person x (keypoints)
         _kpts = []
+        images_list = []
         for idx, kpt in enumerate(preds):
             if idx != 0 and img_path[idx] != img_path[idx - 1]:
                 im_id += 1
@@ -340,10 +364,15 @@ class DadDataset(JointsDataset):
                 'image': img_path[idx],
                 'imgnum': im_id #add
             })
+            images_list.append(img_path[idx])
         # image x person x (keypoints)
         kpts = defaultdict(list)
         for kpt in _kpts:
             kpts[kpt['image']].append(kpt)
+            
+        with open('pred_image_list.json', 'w') as json_file:
+            json.dump(images_list, json_file, indent=2)
+        print("\n Json file saved")
 
         # rescoring and oks nms
         num_joints = self.num_joints
@@ -457,6 +486,8 @@ class DadDataset(JointsDataset):
         return cat_results
 
     def _do_python_keypoint_eval(self, res_file, res_folder):
+        
+        print("\n Res FILE IS: ", res_file)
   
         coco_dt = self.coco.loadRes(res_file)
         coco_eval = COCOeval(self.coco, coco_dt, 'keypoints')

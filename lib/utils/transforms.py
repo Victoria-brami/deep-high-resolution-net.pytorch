@@ -10,6 +10,7 @@ from __future__ import print_function
 
 import numpy as np
 import cv2
+from random import random
 
 
 def flip_back(output_flipped, matched_parts):
@@ -119,3 +120,25 @@ def crop(img, center, scale, output_size, rot=0):
     )
 
     return dst_img
+
+
+# ADDED TRANSFORMATIONS
+
+def brightness_transform(img, factor):
+    
+    bright = np.ones(img.shape, dtype="uint8") * factor
+    if random() < 0.5:
+        dst_img = cv2.subtract(img, bright)
+    else:
+        dst_img = cv2.add(img, bright)
+    return dst_img
+
+def gaussian_noise_transform(img):
+    gauss = np.random.normal(0, 1, img.shape)
+    gauss = gauss.reshape(img.shape).astype('uint8')
+    dst_img = cv2.add(img, gauss)
+    return dst_img
+
+def average_blur_transform(img):
+    blur = cv2.blur(img,(5,5))
+    return blur

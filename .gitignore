@@ -92,4 +92,7 @@ external/
 
 draws/
 plot/
+core.*
+
+best_results/*
 

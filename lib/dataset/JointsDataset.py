@@ -20,7 +20,8 @@ from torch.utils.data import Dataset
 from utils.transforms import get_affine_transform
 from utils.transforms import affine_transform
 from utils.transforms import fliplr_joints
-
+from utils.transforms import brightness_transform
+from utils.transforms import gaussian_noise_transform, average_blur_transform
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,9 @@ class JointsDataset(Dataset):
         self.scale_factor = cfg.DATASET.SCALE_FACTOR
         self.rotation_factor = cfg.DATASET.ROT_FACTOR
         self.flip = cfg.DATASET.FLIP
+        self.bright = cfg.DATASET.BRIGHTNESS_FACTOR
+        self.gauss_factor = cfg.DATASET.GAUSS_FACTOR
+        self.average = cfg.DATASET.AVERAGE_FACTOR
         self.num_joints_half_body = cfg.DATASET.NUM_JOINTS_HALF_BODY
         self.prob_half_body = cfg.DATASET.PROB_HALF_BODY
         self.color_rgb = cfg.DATASET.COLOR_RGB
@@ -164,6 +168,16 @@ class JointsDataset(Dataset):
                 joints, joints_vis = fliplr_joints(
                     joints, joints_vis, data_numpy.shape[1], self.flip_pairs)
                 c[0] = data_numpy.shape[1] - c[0] - 1
+                
+            # New augmentations ADDED    
+            if self.bright != 0 and random.random() <= 0.5:
+                data_numpy = brightness_transform(data_numpy, int(random.random()*self.bright))
+            if random.random() <= self.average:
+                data_numpy = average_blur_transform(data_numpy)
+            if random.random() <= self.gauss_factor:
+                data_numpy = gaussian_noise_transform(data_numpy)
+            
+                
         if self.apply_augmentation:
             trans = get_affine_transform(c, s, r, self.image_size)
         else:
