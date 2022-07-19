@@ -86,7 +86,7 @@ class TICaMDataset(JointsDataset):
         cats = [cat['name']
                 for cat in self.coco.loadCats(self.coco.getCatIds())]
         self.classes = ['__background__'] + cats
-        logger.info('=> classes: {}'.format(self.classes))
+        logger.info('=> classes: {}'.format(self.classes[:3]))
         self.num_classes = len(self.classes)
         self._class_to_ind = dict(zip(self.classes, range(self.num_classes)))
         self._class_to_coco_ind = dict(zip(cats, self.coco.getCatIds()))
@@ -126,17 +126,18 @@ class TICaMDataset(JointsDataset):
 
         logger.info('=> load {} samples'.format(len(self.db)))
 
-    def _get_ann_file_keypoint(self):
+    def _get_ann_file_keypoint(self, name=None):
         """ self.root / annotations / person_keypoints_train2017.json """
         prefix = 'person_keypoints' \
             if 'test' not in self.image_set else 'image_info'
-        return os.path.join(self.root, 'ticam_train_coco_format.json')
-        """
-        return os.path.join(
+        if 'train' in self.image_set:
+            return os.path.join(self.root, 'ticam_train_coco_format.json')
+        else: 
+            return os.path.join(
             self.root,
-            'annotations',
-            prefix + '_' + self.image_set + '.json'
-        )"""
+            prefix + '_' + self.image_set + '_coco_format.json'
+        )
+
 
     def _load_image_set_index(self):
         """ image id: int """

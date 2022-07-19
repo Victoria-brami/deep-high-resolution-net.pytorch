@@ -188,7 +188,7 @@ class COCODataset(JointsDataset):
                 joints_3d[ipt, 1] = obj['keypoints'][ipt * 3 + 1]
                 joints_3d[ipt, 2] = 0
                 t_vis = obj['keypoints'][ipt * 3 + 2]
-                if t_vis > 1:
+                if t_vis > 1: # MODIFIED STRICT INEQUALITY
                     t_vis = 1
                 joints_3d_vis[ipt, 0] = t_vis
                 joints_3d_vis[ipt, 1] = t_vis
@@ -201,8 +201,8 @@ class COCODataset(JointsDataset):
                 'scale': scale,
                 'joints_3d': joints_3d,
                 'joints_3d_vis': joints_3d_vis,
-                'filename': '',
-                'imgnum': 0,
+                'filename': self.image_path_from_index(index),
+                'imgnum': index,
             })
 
         return rec

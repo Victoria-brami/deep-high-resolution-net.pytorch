@@ -162,9 +162,9 @@ def main():
     optimizer = get_optimizer(cfg, model)
     begin_epoch = cfg.TRAIN.BEGIN_EPOCH
     checkpoint_file = os.path.join(
-        final_output_dir, 'pose_hrnet_w32_256x192.pth.pth'
+        final_output_dir, cfg.CHECKPOINT_FILE
     )
-    print("Final output dir is :", final_output_dir)
+    print(" \n      FINAL OUTPUT DIR is :", final_output_dir, "\n")
     #checkpoint_file = os.path.join("/root/workspace/deep-high-resolution-net.pytorch/models/pytorch/pose_coco", "pose_hrnet_w32_256x192.pth")
 
     if cfg.AUTO_RESUME and os.path.exists(checkpoint_file):
@@ -174,11 +174,13 @@ def main():
         #best_perf = checkpoint['perf']
         #last_epoch = checkpoint['epoch']
         #model.load_state_dict(checkpoint['state_dict'])
-        model.load_state_dict(checkpoint['state_dict'])
+        model.load_state_dict(checkpoint)
 
-        optimizer.load_state_dict(checkpoint['optimizer'])
+        # optimizer.load_state_dict(checkpoint['optimizer'])
+        # logger.info("=> loaded checkpoint '{}' (epoch {})".format(
+        #     checkpoint_file, checkpoint['epoch']))
         logger.info("=> loaded checkpoint '{}' (epoch {})".format(
-            checkpoint_file, checkpoint['epoch']))
+             checkpoint_file, begin_epoch))
 
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, cfg.TRAIN.LR_STEP, cfg.TRAIN.LR_FACTOR,

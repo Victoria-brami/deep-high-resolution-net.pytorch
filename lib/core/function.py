@@ -101,7 +101,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
 
 
 def validate(config, val_loader, val_dataset, model, criterion, output_dir,
-             tb_log_dir, writer_dict=None, wb=None):
+             tb_log_dir, writer_dict=None, wb=None, device=None):
     batch_time = AverageMeter()
     losses = AverageMeter()
     acc = AverageMeter()
@@ -122,6 +122,7 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir,
     with torch.no_grad():
         end = time.time()
         for i, (input, target, target_weight, meta) in enumerate(val_loader):
+            
             # compute output
             outputs = model(input)
             if isinstance(outputs, list):
@@ -140,18 +141,20 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir,
 
                 output_flipped = flip_back(output_flipped.cpu().numpy(),
                                            val_dataset.flip_pairs)
-                output_flipped = torch.from_numpy(output_flipped.copy()).cuda()
-
-
+                if device is None:
+                    output_flipped = torch.from_numpy(output_flipped.copy()).cuda()
+                else:
+                    output_flipped = torch.from_numpy(output_flipped.copy())
                 # feature is not aligned, shift flipped heatmap for higher accuracy
                 if config.TEST.SHIFT_HEATMAP:
                     output_flipped[:, :, :, 1:] = \
                         output_flipped.clone()[:, :, :, 0:-1]
 
                 output = (output + output_flipped) * 0.5
-
-            target = target.cuda(non_blocking=True)
-            target_weight = target_weight.cuda(non_blocking=True)
+            
+            if device is None:
+                target = target.cuda(non_blocking=True)
+                target_weight = target_weight.cuda(non_blocking=True)
 
             loss = criterion(output, target, target_weight)
 
@@ -199,7 +202,10 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir,
                 )
                 save_debug_images(config, input, meta, target, pred*4, output,
                                   prefix)
-
+            # ADDED for evaluation
+            save_debug_images(config, input, meta, target, pred*4, output,
+                                    prefix)
+            print("Images were SAVED in {} folder".format(prefix))
         name_values, perf_indicator = val_dataset.evaluate(
             config, all_preds, output_dir, all_boxes, image_path,
             filenames, imgnums

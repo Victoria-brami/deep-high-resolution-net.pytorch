@@ -12,7 +12,8 @@ PRINT_FREQ: 100
 
 DATASET:
   AUGMENTATION: true
-  COLOR_RGB: true
+  COLOR_RGB: false
+  NO_COLOR: true
   DATASET: 'pandora'
   DATA_FORMAT: png
   FLIP: false
@@ -30,12 +31,12 @@ MODEL:
   PRETRAINED: 'models/pytorch/imagenet/hrnet_w32-36af842e.pth'
   TARGET_TYPE: gaussian
   IMAGE_SIZE:
-  - 192
-  - 256
+  - 288
+  - 384
   HEATMAP_SIZE:
-  - 48
-  - 64
-  SIGMA: 2
+  - 72
+  - 96
+  SIGMA: 3
   EXTRA:
     PRETRAINED_LAYERS:
     - 'conv1'
@@ -109,7 +110,7 @@ TRAIN:
   NESTEROV: false
 TEST:
   BATCH_SIZE_PER_GPU: 32
-  COCO_BBOX_FILE: '/datasets_local/TICaM/ticam_detections_person.json'
+  COCO_BBOX_FILE: 'data/coco/person_detection_results/COCO_val2017_detections_AP_H_56_person.json'
   BBOX_THRE: 1.0
   IMAGE_THRE: 0.0
   IN_VIS_THRE: 0.2

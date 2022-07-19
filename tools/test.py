@@ -61,6 +61,7 @@ def parse_args():
                         help='prev Model directory',
                         type=str,
                         default='')
+    parser.add_argument('--device', type=str, default=None)
 
     args = parser.parse_args()
     return args
@@ -87,7 +88,10 @@ def main():
 
     if cfg.TEST.MODEL_FILE:
         logger.info('=> loading model from {}'.format(cfg.TEST.MODEL_FILE))
-        model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE), strict=False)
+        if args.device is not None:
+            model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE, map_location=args.device), strict=False)
+        else:
+            model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE), strict=False)
     else:
         model_state_file = os.path.join(
             final_output_dir, 'final_state.pth'
@@ -95,12 +99,18 @@ def main():
         logger.info('=> loading model from {}'.format(model_state_file))
         model.load_state_dict(torch.load(model_state_file))
 
-    model = torch.nn.DataParallel(model, device_ids=cfg.GPUS).cuda()
+    if args.device is None:
+        model = torch.nn.DataParallel(model, device_ids=cfg.GPUS).cuda()
 
-    # define loss function (criterion) and optimizer
-    criterion = JointsMSELoss(
-        use_target_weight=cfg.LOSS.USE_TARGET_WEIGHT
-    ).cuda()
+        # define loss function (criterion) and optimizer
+        criterion = JointsMSELoss(
+            use_target_weight=cfg.LOSS.USE_TARGET_WEIGHT
+        ).cuda()
+    else:
+            # define loss function (criterion) and optimizer
+        criterion = JointsMSELoss(
+            use_target_weight=cfg.LOSS.USE_TARGET_WEIGHT
+        )
 
     # Data loading code
     normalize = transforms.Normalize(
@@ -123,7 +133,7 @@ def main():
 
     # evaluate on validation set
     validate(cfg, valid_loader, valid_dataset, model, criterion,
-             final_output_dir, tb_log_dir)
+             final_output_dir, tb_log_dir, device=args.device)
 
 
 if __name__ == '__main__':

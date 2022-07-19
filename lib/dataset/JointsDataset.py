@@ -50,6 +50,7 @@ class JointsDataset(Dataset):
         self.num_joints_half_body = cfg.DATASET.NUM_JOINTS_HALF_BODY
         self.prob_half_body = cfg.DATASET.PROB_HALF_BODY
         self.color_rgb = cfg.DATASET.COLOR_RGB
+        self.no_color = cfg.DATASET.NO_COLOR
 
         self.target_type = cfg.MODEL.TARGET_TYPE
         self.image_size = np.array(cfg.MODEL.IMAGE_SIZE)
@@ -134,6 +135,12 @@ class JointsDataset(Dataset):
 
         if self.color_rgb:
             data_numpy = cv2.cvtColor(data_numpy, cv2.COLOR_BGR2RGB)
+        
+        """"""    
+        if self.no_color :
+            data_numpy = cv2.cvtColor(data_numpy, cv2.COLOR_RGB2GRAY)
+            data_numpy = cv2.cvtColor(data_numpy, cv2.COLOR_GRAY2RGB)
+            
 
         if data_numpy is None:
             logger.error('=> fail to read {}'.format(image_file))
