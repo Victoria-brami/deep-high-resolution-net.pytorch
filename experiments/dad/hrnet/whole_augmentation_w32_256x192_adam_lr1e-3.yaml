@@ -6,22 +6,24 @@ CUDNN:
   ENABLED: true
 DATA_DIR: ''
 GPUS: (0,)
-OUTPUT_DIR: 'finetune_output/no_augmentation'
+OUTPUT_DIR: 'finetune_output/whole_augmentation'
 LOG_DIR: 'log'
 WORKERS: 24
 PRINT_FREQ: 100
 
 DATASET:
-  AUGMENTATION: true
   COLOR_RGB: true
   DATASET: 'dad'
   DATA_FORMAT: jpg
-  FLIP: false
+  FLIP: true
   NUM_JOINTS_HALF_BODY: 8
-  PROB_HALF_BODY: 0.
+  PROB_HALF_BODY: 0.3
   ROOT: '/datasets_local/DriveAndAct'
-  ROT_FACTOR: 0
-  SCALE_FACTOR: 0.
+  ROT_FACTOR: 45
+  SCALE_FACTOR: 0.35
+  BRIGHTNESS_FACTOR: 20
+  GAUSS_FACTOR: 0.1
+  AVERAGE_FACTOR: 0.1
   TEST_SET: 'filt_small_val_6000' #"val"
   TRAIN_SET: 'small_train_6000' #'train'
 MODEL:

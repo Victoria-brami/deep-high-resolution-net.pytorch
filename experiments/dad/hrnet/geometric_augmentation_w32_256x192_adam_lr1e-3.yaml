@@ -21,7 +21,7 @@ DATASET:
   ROOT: '/datasets_local/DriveAndAct'
   ROT_FACTOR: 45
   SCALE_FACTOR: 0.35
-  TEST_SET: 'small_val_6000' #"val"
+  TEST_SET: 'filt_small_val_6000' #"val"
   TRAIN_SET: 'small_train_6000' #'train'
 MODEL:
   INIT_WEIGHTS: true
