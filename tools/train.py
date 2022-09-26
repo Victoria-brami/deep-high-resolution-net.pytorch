@@ -174,7 +174,9 @@ def main():
         #best_perf = checkpoint['perf']
         #last_epoch = checkpoint['epoch']
         #model.load_state_dict(checkpoint['state_dict'])
-        model.load_state_dict(checkpoint)
+        from collections import OrderedDict
+        checkpoint2 = OrderedDict([('module.'+k, v)for k, v in checkpoint.items()])
+        model.load_state_dict(checkpoint2)
 
         # optimizer.load_state_dict(checkpoint['optimizer'])
         # logger.info("=> loaded checkpoint '{}' (epoch {})".format(
