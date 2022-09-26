@@ -5,7 +5,7 @@ CUDNN:
   ENABLED: true
 DATA_DIR: ''
 GPUS: (0,)
-OUTPUT_DIR: 'output'
+OUTPUT_DIR: '/root/no_backup/presentation_figures/hrnet/'
 LOG_DIR: 'log'
 WORKERS: 24
 PRINT_FREQ: 100
@@ -17,7 +17,7 @@ DATASET:
   FLIP: true
   NUM_JOINTS_HALF_BODY: 8
   PROB_HALF_BODY: 0.3
-  ROOT: 'datasets_master/TICaM/' #'data/coco/'
+  ROOT: '/datasets_local/DriveAndAct/' #'data/coco/'
   ROT_FACTOR: 45
   SCALE_FACTOR: 0.35
   TEST_SET: 'val2017'
@@ -26,7 +26,7 @@ MODEL:
   INIT_WEIGHTS: true
   NAME: pose_hrnet
   NUM_JOINTS: 17
-  PRETRAINED: 'models/pytorch/pose_coco/pose_hrnet_w32_256x192.pth'
+  PRETRAINED: '/root/workspace/deep-high-resolution-net.pytorch/finetune_output/whole_augmentation/dad/pose_hrnet/whole_augmentation_w32_256x192_adam_lr1e-3/model_best.pth' #'models/pytorch/pose_coco/pose_hrnet_w32_256x192.pth'
   TARGET_TYPE: gaussian
   IMAGE_SIZE:
   - 288
@@ -112,7 +112,7 @@ TEST:
   BBOX_THRE: 1.0
   IMAGE_THRE: 0.0
   IN_VIS_THRE: 0.2
-  MODEL_FILE: 'models/pytorch/pose_coco/pose_hrnet_w32_384x288.pth'
+  MODEL_FILE: '/root/workspace/deep-high-resolution-net.pytorch/models/pytorch/pose_coco/pose_hrnet_w32_256x192.pth' #'/root/workspace/deep-high-resolution-net.pytorch/finetune_output/geometric_augmentation/dad/pose_hrnet/geometric_augmentation_w32_256x192_adam_lr1e-3/model_best.pth' #'models/pytorch/pose_coco/pose_hrnet_w32_384x288.pth'
   NMS_THRE: 1.0
   OKS_THRE: 0.9
   USE_GT_BBOX: true

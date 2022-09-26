@@ -21,7 +21,25 @@ import numpy as np
 import time
 
 
-import demo._init_paths
+import os.path as osp
+import sys
+
+
+def add_path(path):
+    if path not in sys.path:
+        sys.path.insert(0, path)
+
+
+this_dir = osp.dirname(__file__)
+
+lib_path = osp.join(this_dir, '..', 'lib')
+add_path(lib_path)
+
+mm_path = osp.join(this_dir, '..', 'lib/poseeval/py-motmetrics')
+add_path(mm_path)
+
+
+# import demo._init_paths
 import models
 from config import cfg
 from config import update_config
@@ -170,13 +188,13 @@ def get_pose_estimation_prediction(pose_model, image, center, scale):
     with torch.no_grad():
         # compute output heatmap
         output = pose_model(model_input)
-        preds, _ = get_final_preds(
+        preds, maxval = get_final_preds(
             cfg,
             output.clone().cpu().numpy(),
             np.asarray([center]),
             np.asarray([scale]))
 
-        return preds
+        return preds, maxval
 
 
 def box_to_center_scale(box, model_image_width, model_image_height):
@@ -228,6 +246,7 @@ def parse_args():
     parser.add_argument('--webcam',action='store_true')
     parser.add_argument('--image',type=str)
     parser.add_argument('--write', action='store_true')
+    parser.add_argument('--write_json', action='store_true')
     parser.add_argument('--showFps',action='store_true')
     parser.add_argument('--device', default="cpu")
     parser.add_argument('--save_path', type=str, default='/root/workspace/deep-high-resolution-net.pytorch/videos/output.mkv')
@@ -356,7 +375,7 @@ def main():
             for box in pred_boxes:
                 center, scale = box_to_center_scale(box, cfg.MODEL.IMAGE_SIZE[0], cfg.MODEL.IMAGE_SIZE[1])
                 image_pose = image.copy() if cfg.DATASET.COLOR_RGB else image_bgr.copy()
-                pose_preds = get_pose_estimation_prediction(pose_model, image_pose, center, scale)
+                pose_preds, maxval = get_pose_estimation_prediction(pose_model, image_pose, center, scale)
                 if len(pose_preds)>=1:
                     for kpt in pose_preds:
                         draw_pose(kpt,image_bgr,args.no_ankle,args.no_knee) # draw the poses
@@ -364,7 +383,20 @@ def main():
         if args.showFps:
             fps = 1/(time.time()-last_time)
             img = cv2.putText(image_bgr, 'fps: '+ "%.2f"%(fps), (25, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
-        
+        print("\n /////////// Keypoints /////////// \n")
+        print(pose_preds, "\n")
+        print(maxval)
+        print("\n //////////////////////////////// \n")
+        if args.write_json:
+            kpts = []
+            for i in range(17):
+                kpts.append(float(pose_preds[0][i][0]))
+                kpts.append(float(pose_preds[0][i][1]))
+                kpts.append(float(maxval[0][i][0]))
+            import json
+            image_short_name = "_".join(args.image.split('/')[-2:])
+            with open("/root/no_backup/presentation_figures/hrnet/default/"+image_short_name+".json", "w") as json_file:
+                json.dump({'keypoints': kpts}, json_file)
         if args.write:
             save_path = 'output.jpg'
             cv2.imwrite(args.save_path,image_bgr)
